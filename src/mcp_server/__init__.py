@@ -1,2 +1,1 @@
-"""MCP server package."""
-
+"""MCP 服务模块。"""

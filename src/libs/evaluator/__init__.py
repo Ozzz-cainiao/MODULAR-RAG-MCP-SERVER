@@ -1,2 +1,1 @@
-"""Evaluator adapters package."""
-
+"""Evaluator 适配器模块。"""

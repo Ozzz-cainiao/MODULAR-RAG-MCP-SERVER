@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Modular RAG MCP server"
 requires-python = ">=3.11"
 dependencies = [
+    "pyyaml>=6.0.0",
     "pytest>=8.0.0",
 ]
 

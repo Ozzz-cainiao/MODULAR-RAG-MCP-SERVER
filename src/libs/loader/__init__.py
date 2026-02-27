@@ -1,2 +1,1 @@
-"""Loader adapters package."""
-
+"""Loader 适配器模块。"""

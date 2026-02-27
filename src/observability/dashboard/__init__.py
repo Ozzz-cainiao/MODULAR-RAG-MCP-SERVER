@@ -1,2 +1,1 @@
-"""Dashboard package."""
-
+"""Dashboard 模块。"""

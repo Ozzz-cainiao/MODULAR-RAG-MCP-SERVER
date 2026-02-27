@@ -1,2 +1,1 @@
-"""Tracing package."""
-
+"""Trace 链路追踪模块。"""

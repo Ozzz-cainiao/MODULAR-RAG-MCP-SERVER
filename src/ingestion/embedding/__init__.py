@@ -1,2 +1,1 @@
-"""Embedding pipeline package."""
-
+"""Embedding 流水线模块。"""

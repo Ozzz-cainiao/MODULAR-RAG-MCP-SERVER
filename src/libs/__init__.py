@@ -1,2 +1,1 @@
-"""Pluggable libs package."""
-
+"""Libs 可插拔模块。"""

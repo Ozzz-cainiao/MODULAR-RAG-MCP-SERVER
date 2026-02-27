@@ -1,2 +1,1 @@
-"""MCP tool definitions package."""
-
+"""MCP 工具定义模块。"""

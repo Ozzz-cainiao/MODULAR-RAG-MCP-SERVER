@@ -1,2 +1,1 @@
-"""Vector store adapters package."""
-
+"""Vector Store 适配器模块。"""

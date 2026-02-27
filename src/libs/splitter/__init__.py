@@ -1,2 +1,1 @@
-"""Splitter adapters package."""
-
+"""Splitter 适配器模块。"""

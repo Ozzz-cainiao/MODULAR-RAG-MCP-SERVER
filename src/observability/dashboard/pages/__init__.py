@@ -1,2 +1,1 @@
-"""Dashboard pages package."""
-
+"""Dashboard Pages 模块。"""

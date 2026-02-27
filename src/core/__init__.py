@@ -1,2 +1,1 @@
-"""Core business logic package."""
-
+"""Core 业务逻辑模块。"""

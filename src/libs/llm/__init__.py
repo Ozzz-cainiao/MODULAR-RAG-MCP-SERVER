@@ -1,2 +1,1 @@
-"""LLM adapters package."""
-
+"""LLM 适配器模块。"""
