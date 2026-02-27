@@ -1,0 +1,15 @@
+llm:
+  provider: openai
+embedding:
+  provider: openai
+vector_store:
+  provider: chroma
+retrieval:
+  top_k: 5
+rerank:
+  provider: none
+evaluation:
+  provider: custom
+observability:
+  level: INFO
+

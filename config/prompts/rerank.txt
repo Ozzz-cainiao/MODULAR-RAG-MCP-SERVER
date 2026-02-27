@@ -1,0 +1,2 @@
+Score each candidate by relevance to the query and return ranked results.
+

@@ -1,0 +1,17 @@
+[project]
+name = "modular-rag-mcp-server"
+version = "0.1.0"
+description = "Modular RAG MCP server"
+requires-python = ">=3.11"
+dependencies = []
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+

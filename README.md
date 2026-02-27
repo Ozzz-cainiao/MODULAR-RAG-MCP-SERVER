@@ -38,4 +38,13 @@
 
 ## 📄 License
 
+## 🏗️ 当前骨架状态
+
+当前已完成阶段 A1（工程骨架初始化）：
+
+- 已创建 `src/` 下核心包目录与 `__init__.py`，支持顶层模块导入
+- 已创建 `config/settings.yaml` 与 `config/prompts/` 三个提示词模板
+- 已补齐 `pyproject.toml`、`main.py`、`.gitignore` 等基础工程文件
+- 已创建 `data/`、`cache/`、`logs/`、`tests/`、`scripts/` 基础目录
+
 MIT
