@@ -13,4 +13,4 @@ htmlcov/
 .DS_Store
 .idea/
 .vscode/
-
+*.mp4
