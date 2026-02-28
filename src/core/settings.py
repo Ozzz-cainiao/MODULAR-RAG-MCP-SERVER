@@ -52,6 +52,7 @@ class Settings:
     属性:
         llm: LLM provider 配置。
         embedding: Embedding provider 配置。
+        splitter: Splitter provider 配置。
         vector_store: 向量存储 provider 配置。
         retrieval: 检索配置。
         rerank: 重排 provider 配置。
@@ -61,6 +62,7 @@ class Settings:
 
     llm: ProviderSettings
     embedding: ProviderSettings
+    splitter: ProviderSettings
     vector_store: ProviderSettings
     retrieval: RetrievalSettings
     rerank: ProviderSettings
@@ -102,6 +104,8 @@ def validate_settings(settings: Settings) -> None:
         raise SettingsValidationError("缺少必填字段: llm.provider")
     if not settings.embedding.provider:
         raise SettingsValidationError("缺少必填字段: embedding.provider")
+    if not settings.splitter.provider:
+        raise SettingsValidationError("缺少必填字段: splitter.provider")
     if not settings.vector_store.provider:
         raise SettingsValidationError("缺少必填字段: vector_store.provider")
     if settings.retrieval.top_k <= 0:
@@ -128,6 +132,7 @@ def _read_yaml(path: str) -> dict[str, object]:
 def _build_settings(raw_data: dict[str, object]) -> Settings:
     llm = _build_provider_settings(raw_data, "llm")
     embedding = _build_provider_settings(raw_data, "embedding")
+    splitter = _build_provider_settings(raw_data, "splitter")
     vector_store = _build_provider_settings(raw_data, "vector_store")
     rerank = _build_provider_settings(raw_data, "rerank")
     evaluation = _build_provider_settings(raw_data, "evaluation")
@@ -137,6 +142,7 @@ def _build_settings(raw_data: dict[str, object]) -> Settings:
     return Settings(
         llm=llm,
         embedding=embedding,
+        splitter=splitter,
         vector_store=vector_store,
         retrieval=retrieval,
         rerank=rerank,

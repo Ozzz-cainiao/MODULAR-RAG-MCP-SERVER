@@ -29,6 +29,7 @@ def _build_settings(provider: str) -> Settings:
     return Settings(
         llm=ProviderSettings(provider=provider),
         embedding=ProviderSettings(provider="openai"),
+        splitter=ProviderSettings(provider="recursive"),
         vector_store=ProviderSettings(provider="chroma"),
         retrieval=RetrievalSettings(top_k=5),
         rerank=ProviderSettings(provider="none"),
@@ -57,4 +58,3 @@ def test_llm_factory_create_when_provider_missing_then_raise_readable_error() ->
 
     with pytest.raises(ValueError, match="not-registered-provider"):
         LLMFactory.create(settings)
-

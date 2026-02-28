@@ -31,6 +31,7 @@ def _build_settings(provider: str) -> Settings:
     return Settings(
         llm=ProviderSettings(provider="openai"),
         embedding=ProviderSettings(provider=provider),
+        splitter=ProviderSettings(provider="recursive"),
         vector_store=ProviderSettings(provider="chroma"),
         retrieval=RetrievalSettings(top_k=5),
         rerank=ProviderSettings(provider="none"),
@@ -59,4 +60,3 @@ def test_embedding_factory_create_when_provider_missing_then_raise_readable_erro
 
     with pytest.raises(ValueError, match="not-registered-embedding"):
         EmbeddingFactory.create(settings)
-

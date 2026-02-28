@@ -20,6 +20,8 @@ def test_load_settings_when_valid_yaml_then_returns_settings(tmp_path: Path) -> 
               provider: openai
             embedding:
               provider: openai
+            splitter:
+              provider: recursive
             vector_store:
               provider: chroma
             retrieval:
@@ -50,6 +52,8 @@ def test_load_settings_when_embedding_provider_missing_then_raise_readable_error
             llm:
               provider: openai
             embedding: {}
+            splitter:
+              provider: recursive
             vector_store:
               provider: chroma
             retrieval:
