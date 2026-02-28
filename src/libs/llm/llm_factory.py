@@ -5,7 +5,10 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from core.settings import Settings
+from libs.llm.azure_llm import AzureLLM
 from libs.llm.base_llm import BaseLLM
+from libs.llm.deepseek_llm import DeepSeekLLM
+from libs.llm.openai_llm import OpenAILLM
 
 
 LLMBuilder = Callable[[Settings], BaseLLM]
@@ -17,7 +20,11 @@ class LLMFactory:
     通过 provider 名称路由到已注册的 LLM 构建器。
     """
 
-    _registry: dict[str, LLMBuilder] = {}
+    _registry: dict[str, LLMBuilder] = {
+        "openai": OpenAILLM,
+        "azure": AzureLLM,
+        "deepseek": DeepSeekLLM,
+    }
 
     @classmethod
     def register(cls, provider: str, builder: LLMBuilder) -> None:
@@ -56,4 +63,3 @@ class LLMFactory:
             raise ValueError(f"未注册的 llm provider: {provider}")
 
         return builder(settings)
-

@@ -40,3 +40,8 @@
 - 包括但不限于：行内注释、块注释、函数/类文档字符串（docstring）中的注释性描述。
 - 新增或修改代码时，若存在英文注释，需同步改为中文。
 - 英语技术术语（如 MCP、LLM、Embedding、Vector Store、Dashboard）保留英文，不强制翻译。
+
+## 7. 协作执行偏好
+
+- 常用开发命令默认自动执行，不需要逐条确认（如 `git add`、`git commit`、`git status`、`powershell Get-Content`）。
+- 定向测试默认自动执行，不需要单独确认。
