@@ -9,6 +9,7 @@ from libs.llm.azure_llm import AzureLLM
 from libs.llm.base_llm import BaseLLM
 from libs.llm.deepseek_llm import DeepSeekLLM
 from libs.llm.openai_llm import OpenAILLM
+from libs.llm.ollama_llm import OllamaLLM
 
 
 LLMBuilder = Callable[[Settings], BaseLLM]
@@ -24,6 +25,7 @@ class LLMFactory:
         "openai": OpenAILLM,
         "azure": AzureLLM,
         "deepseek": DeepSeekLLM,
+        "ollama": OllamaLLM,
     }
 
     @classmethod
