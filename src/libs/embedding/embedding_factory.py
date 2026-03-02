@@ -8,6 +8,7 @@ from core.settings import Settings
 from libs.embedding.azure_embedding import AzureEmbedding
 from libs.embedding.base_embedding import BaseEmbedding
 from libs.embedding.openai_embedding import OpenAIEmbedding
+from libs.embedding.ollama_embedding import OllamaEmbedding
 
 
 EmbeddingBuilder = Callable[[Settings], BaseEmbedding]
@@ -22,6 +23,7 @@ class EmbeddingFactory:
     _registry: dict[str, EmbeddingBuilder] = {
         "openai": OpenAIEmbedding,
         "azure": AzureEmbedding,
+        "ollama": OllamaEmbedding,
     }
 
     @classmethod
