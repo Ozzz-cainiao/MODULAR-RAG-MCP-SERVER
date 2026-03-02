@@ -5,7 +5,9 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from core.settings import Settings
+from libs.embedding.azure_embedding import AzureEmbedding
 from libs.embedding.base_embedding import BaseEmbedding
+from libs.embedding.openai_embedding import OpenAIEmbedding
 
 
 EmbeddingBuilder = Callable[[Settings], BaseEmbedding]
@@ -17,7 +19,10 @@ class EmbeddingFactory:
     通过 provider 名称路由到已注册的 Embedding 构建器。
     """
 
-    _registry: dict[str, EmbeddingBuilder] = {}
+    _registry: dict[str, EmbeddingBuilder] = {
+        "openai": OpenAIEmbedding,
+        "azure": AzureEmbedding,
+    }
 
     @classmethod
     def register(cls, provider: str, builder: EmbeddingBuilder) -> None:
@@ -56,4 +61,3 @@ class EmbeddingFactory:
             raise ValueError(f"未注册的 embedding provider: {provider}")
 
         return builder(settings)
-
