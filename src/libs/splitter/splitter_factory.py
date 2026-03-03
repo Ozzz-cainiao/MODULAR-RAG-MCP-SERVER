@@ -6,6 +6,7 @@ from collections.abc import Callable
 
 from core.settings import Settings
 from libs.splitter.base_splitter import BaseSplitter
+from libs.splitter.recursive_splitter import RecursiveSplitter
 
 
 SplitterBuilder = Callable[[Settings], BaseSplitter]
@@ -17,7 +18,9 @@ class SplitterFactory:
     通过 provider 名称路由到已注册的 Splitter 构建器。
     """
 
-    _registry: dict[str, SplitterBuilder] = {}
+    _registry: dict[str, SplitterBuilder] = {
+        "recursive": RecursiveSplitter,
+    }
 
     @classmethod
     def register(cls, provider: str, builder: SplitterBuilder) -> None:
@@ -56,4 +59,3 @@ class SplitterFactory:
             raise ValueError(f"未注册的 splitter provider: {provider}")
 
         return builder(settings)
-
