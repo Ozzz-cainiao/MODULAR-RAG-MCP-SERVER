@@ -6,6 +6,7 @@ from collections.abc import Callable
 
 from core.settings import Settings
 from libs.vector_store.base_vector_store import BaseVectorStore
+from libs.vector_store.chroma_store import ChromaStore
 
 
 VectorStoreBuilder = Callable[[Settings], BaseVectorStore]
@@ -17,7 +18,9 @@ class VectorStoreFactory:
     通过 provider 名称路由到已注册的 Vector Store 构建器。
     """
 
-    _registry: dict[str, VectorStoreBuilder] = {}
+    _registry: dict[str, VectorStoreBuilder] = {
+        "chroma": ChromaStore,
+    }
 
     @classmethod
     def register(cls, provider: str, builder: VectorStoreBuilder) -> None:
@@ -56,4 +59,3 @@ class VectorStoreFactory:
             raise ValueError(f"未注册的 vector_store provider: {provider}")
 
         return builder(settings)
-
