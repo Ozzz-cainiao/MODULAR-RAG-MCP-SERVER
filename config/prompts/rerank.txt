@@ -1,2 +1,12 @@
-Score each candidate by relevance to the query and return ranked results.
+请根据用户 query 对候选结果按相关性从高到低排序。
 
+query:
+{query}
+
+candidates:
+{candidates_json}
+
+输出要求：
+- 只输出 JSON 对象，不要输出其他解释文本
+- JSON schema 必须为：{"ranked_ids": ["chunk_id_1", "chunk_id_2"]}
+- ranked_ids 必须包含全部候选 chunk_id，且不能重复

@@ -6,6 +6,7 @@ from collections.abc import Callable
 
 from core.settings import Settings
 from libs.reranker.base_reranker import BaseReranker, RerankCandidate, TraceContext
+from libs.reranker.llm_reranker import LLMReranker
 
 
 RerankerBuilder = Callable[[Settings], BaseReranker]
@@ -34,7 +35,10 @@ class RerankerFactory:
     通过 provider 名称路由到已注册的 Reranker 构建器。
     """
 
-    _registry: dict[str, RerankerBuilder] = {"none": NoneReranker}
+    _registry: dict[str, RerankerBuilder] = {
+        "none": NoneReranker,
+        "llm": LLMReranker,
+    }
 
     @classmethod
     def register(cls, provider: str, builder: RerankerBuilder) -> None:
@@ -73,4 +77,3 @@ class RerankerFactory:
             raise ValueError(f"未注册的 rerank provider: {provider}")
 
         return builder(settings)
-
