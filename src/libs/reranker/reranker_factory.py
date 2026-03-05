@@ -6,6 +6,7 @@ from collections.abc import Callable
 
 from core.settings import Settings
 from libs.reranker.base_reranker import BaseReranker, RerankCandidate, TraceContext
+from libs.reranker.cross_encoder_reranker import CrossEncoderReranker
 from libs.reranker.llm_reranker import LLMReranker
 
 
@@ -38,6 +39,7 @@ class RerankerFactory:
     _registry: dict[str, RerankerBuilder] = {
         "none": NoneReranker,
         "llm": LLMReranker,
+        "cross_encoder": CrossEncoderReranker,
     }
 
     @classmethod
