@@ -7,6 +7,7 @@ from collections.abc import Callable
 from core.settings import Settings
 from libs.llm.azure_llm import AzureLLM
 from libs.llm.base_llm import BaseLLM
+from libs.llm.azure_vision_llm import AzureVisionLLM
 from libs.llm.base_vision_llm import BaseVisionLLM
 from libs.llm.deepseek_llm import DeepSeekLLM
 from libs.llm.openai_llm import OpenAILLM
@@ -29,7 +30,9 @@ class LLMFactory:
         "deepseek": DeepSeekLLM,
         "ollama": OllamaLLM,
     }
-    _vision_registry: dict[str, VisionLLMBuilder] = {}
+    _vision_registry: dict[str, VisionLLMBuilder] = {
+        "azure": AzureVisionLLM,
+    }
 
     @classmethod
     def register(cls, provider: str, builder: LLMBuilder) -> None:
