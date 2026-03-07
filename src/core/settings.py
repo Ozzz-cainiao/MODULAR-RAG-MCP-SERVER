@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
@@ -51,6 +51,7 @@ class Settings:
 
     属性:
         llm: LLM provider 配置。
+        vision_llm: Vision LLM provider 配置。
         embedding: Embedding provider 配置。
         splitter: Splitter provider 配置。
         vector_store: 向量存储 provider 配置。
@@ -68,6 +69,7 @@ class Settings:
     rerank: ProviderSettings
     evaluation: ProviderSettings
     observability: ObservabilitySettings
+    vision_llm: ProviderSettings = field(default_factory=lambda: ProviderSettings(provider=""))
 
 
 def load_settings(path: str) -> Settings:
@@ -131,6 +133,7 @@ def _read_yaml(path: str) -> dict[str, object]:
 
 def _build_settings(raw_data: dict[str, object]) -> Settings:
     llm = _build_provider_settings(raw_data, "llm")
+    vision_llm = _build_optional_provider_settings(raw_data, "vision_llm")
     embedding = _build_provider_settings(raw_data, "embedding")
     splitter = _build_provider_settings(raw_data, "splitter")
     vector_store = _build_provider_settings(raw_data, "vector_store")
@@ -141,6 +144,7 @@ def _build_settings(raw_data: dict[str, object]) -> Settings:
 
     return Settings(
         llm=llm,
+        vision_llm=vision_llm,
         embedding=embedding,
         splitter=splitter,
         vector_store=vector_store,
@@ -154,6 +158,16 @@ def _build_settings(raw_data: dict[str, object]) -> Settings:
 def _build_provider_settings(raw_data: dict[str, object], section: str) -> ProviderSettings:
     section_data = _require_mapping(raw_data, section)
     provider = _require_string(section_data, f"{section}.provider", "provider")
+    return ProviderSettings(provider=provider)
+
+
+def _build_optional_provider_settings(raw_data: dict[str, object], section: str) -> ProviderSettings:
+    value = raw_data.get(section)
+    if value is None:
+        return ProviderSettings(provider="")
+    if not isinstance(value, dict):
+        raise SettingsValidationError(f"缺少必填字段: {section}")
+    provider = _require_string(value, f"{section}.provider", "provider")
     return ProviderSettings(provider=provider)
 
 

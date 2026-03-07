@@ -7,12 +7,14 @@ from collections.abc import Callable
 from core.settings import Settings
 from libs.llm.azure_llm import AzureLLM
 from libs.llm.base_llm import BaseLLM
+from libs.llm.base_vision_llm import BaseVisionLLM
 from libs.llm.deepseek_llm import DeepSeekLLM
 from libs.llm.openai_llm import OpenAILLM
 from libs.llm.ollama_llm import OllamaLLM
 
 
 LLMBuilder = Callable[[Settings], BaseLLM]
+VisionLLMBuilder = Callable[[Settings], BaseVisionLLM]
 
 
 class LLMFactory:
@@ -27,6 +29,7 @@ class LLMFactory:
         "deepseek": DeepSeekLLM,
         "ollama": OllamaLLM,
     }
+    _vision_registry: dict[str, VisionLLMBuilder] = {}
 
     @classmethod
     def register(cls, provider: str, builder: LLMBuilder) -> None:
@@ -41,6 +44,20 @@ class LLMFactory:
         if not normalized_provider:
             raise ValueError("provider 不能为空")
         cls._registry[normalized_provider] = builder
+
+    @classmethod
+    def register_vision_llm(cls, provider: str, builder: VisionLLMBuilder) -> None:
+        """注册 provider 对应的 Vision LLM 构建器。
+
+        参数:
+            provider: provider 名称。
+            builder: 接收 Settings 并返回 BaseVisionLLM 的构建器。
+        """
+
+        normalized_provider = provider.strip().lower()
+        if not normalized_provider:
+            raise ValueError("provider 不能为空")
+        cls._vision_registry[normalized_provider] = builder
 
     @classmethod
     def create(cls, settings: Settings) -> BaseLLM:
@@ -63,5 +80,29 @@ class LLMFactory:
         builder = cls._registry.get(provider)
         if builder is None:
             raise ValueError(f"未注册的 llm provider: {provider}")
+
+        return builder(settings)
+
+    @classmethod
+    def create_vision_llm(cls, settings: Settings) -> BaseVisionLLM:
+        """根据配置创建 Vision LLM 实例。
+
+        参数:
+            settings: 项目全局配置对象。
+
+        返回:
+            BaseVisionLLM 的具体实现实例。
+
+        异常:
+            ValueError: 当 provider 未注册时抛出。
+        """
+
+        provider = settings.vision_llm.provider.strip().lower()
+        if not provider:
+            raise ValueError("vision_llm.provider 不能为空")
+
+        builder = cls._vision_registry.get(provider)
+        if builder is None:
+            raise ValueError(f"未注册的 vision_llm provider: {provider}")
 
         return builder(settings)
