@@ -53,3 +53,31 @@
 因为 B2 的目标是先把抽象层和工厂路由打牢，
 真实 provider 实现在后续子任务（如 B7.3、B7.4）再接入。
 
+### Q2：Embedding 的运行逻辑和 LLM 是同一套吗？
+
+是同一套，只是接口名不同。
+
+对应关系：
+
+- LLM：`BaseLLM.chat(...)` + `LLMFactory.create(settings)`
+- Embedding：`BaseEmbedding.embed(...)` + `EmbeddingFactory.create(settings)`
+
+Embedding 工厂执行步骤与 LLM 一致：
+
+1. 读取 `settings.embedding.provider`
+2. 标准化 `provider`（`strip().lower()`）
+3. 在 `_registry` 查映射（`provider -> builder/class`）
+4. 实例化对象（例如 `OpenAIEmbedding(settings)`）
+5. 上层按 `BaseEmbedding.embed(...)` 统一调用
+
+一句话：**工厂模式是可复用模板，不是 LLM 专属写法。**
+
+### Q3：如何判断“该抽象”还是“不该抽象”？
+
+满足以下任一条件，通常就该抽象：
+
+- 预计会有 2 个及以上可替换实现；
+- 上层调用希望保持稳定；
+- 需要用 Fake/Mock 做单元测试隔离外部依赖。
+
+若只有一次性脚本、无替换需求、无测试要求，直接实现即可，不必过度抽象。

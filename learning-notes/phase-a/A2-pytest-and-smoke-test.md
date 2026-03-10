@@ -123,3 +123,58 @@ pytest 配置是测试运行规则，告诉框架：
 5) 运行 python -m pytest -q tests/unit/test_smoke_imports.py 并汇报结果
 6) 不做与任务无关改动
 ```
+
+### Q6：`pyproject.toml` 的作用与使用方法是什么？
+
+它是 Python 项目的统一配置入口，通常包含三类信息：
+
+1. **项目元信息（[project]）**
+   - 例如：项目名、版本、Python 版本、依赖包。
+   - 用途：让安装/运行环境有明确边界。
+
+2. **构建系统（[build-system]）**
+   - 例如：`setuptools`、`wheel`、构建后端。
+   - 用途：定义项目如何被打包与构建。
+
+3. **工具配置（[tool.xxx]）**
+   - 例如：`[tool.pytest.ini_options]`、`[tool.ruff]`、`[tool.mypy]`。
+   - 用途：把测试/静态检查/格式化规则集中管理，避免散落多个配置文件。
+
+在本项目中，`pyproject.toml` 主要承担：
+
+- 管理 `pytest` 依赖；
+- 定义 pytest 的测试发现规则（`testpaths/python_files/python_functions`）；
+- 定义测试分组标记（`unit/integration/e2e`）。
+
+### Q7：新建项目时，怎样描述才能让大模型生成“带测试基座”的 `pyproject.toml`？
+
+建议使用“目标 + 文件清单 + 明确约束 + 验收命令”的提示词结构。可直接复制：
+
+```text
+请为一个 Python 3.11 项目创建最小可用的 pyproject.toml，并建立 pytest 测试基座。
+
+要求：
+1) 使用 setuptools 作为 build backend
+2) 在 [project] 中设置：
+   - name = "<your-project-name>"
+   - version = "0.1.0"
+   - requires-python = ">=3.11"
+   - dependencies 至少包含 pytest
+3) 在 [tool.pytest.ini_options] 中设置：
+   - testpaths = ["tests"]
+   - python_files = ["test_*.py"]
+   - python_classes = ["Test*"]
+   - python_functions = ["test_*"]
+   - markers = ["unit: unit tests", "integration: integration tests", "e2e: end-to-end tests"]
+4) 同时创建：
+   - tests/unit/test_smoke_imports.py（只验证顶层包可导入）
+   - tests/fixtures/sample_documents/sample.md（最小 fixture）
+5) 输出完成后给出以下验证命令：
+   - pytest -q tests/unit/test_smoke_imports.py
+6) 不要添加与上述目标无关的复杂配置。
+
+请输出：
+- 完整 pyproject.toml 内容
+- 新增测试文件内容
+- 验证命令
+```
