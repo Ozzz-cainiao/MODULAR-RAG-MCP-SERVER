@@ -1,0 +1,5 @@
+Generate metadata for the following chunk.
+Return JSON with keys: title, summary, tags (list of strings).
+
+Chunk:
+{text}

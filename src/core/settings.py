@@ -46,6 +46,40 @@ class ObservabilitySettings:
 
 
 @dataclass(slots=True)
+class ChunkRefinerSettings:
+    """ChunkRefiner 配置段。
+
+    属性:
+        use_llm: 是否启用 LLM 精炼。
+        prompt_path: Prompt 模板路径。
+    """
+
+    use_llm: bool = False
+    prompt_path: str = "config/prompts/chunk_refinement.txt"
+
+
+@dataclass(slots=True)
+class MetadataEnricherSettings:
+    """MetadataEnricher 配置段。
+
+    属性:
+        use_llm: 是否启用 LLM 元数据增强。
+        prompt_path: Prompt 模板路径。
+    """
+
+    use_llm: bool = False
+    prompt_path: str = "config/prompts/metadata_enricher.txt"
+
+
+@dataclass(slots=True)
+class IngestionSettings:
+    """摄取相关配置段。"""
+
+    chunk_refiner: ChunkRefinerSettings = field(default_factory=ChunkRefinerSettings)
+    metadata_enricher: MetadataEnricherSettings = field(default_factory=MetadataEnricherSettings)
+
+
+@dataclass(slots=True)
 class Settings:
     """项目运行时配置。
 
@@ -70,6 +104,7 @@ class Settings:
     evaluation: ProviderSettings
     observability: ObservabilitySettings
     vision_llm: ProviderSettings = field(default_factory=lambda: ProviderSettings(provider=""))
+    ingestion: IngestionSettings = field(default_factory=IngestionSettings)
 
 
 def load_settings(path: str) -> Settings:
@@ -118,6 +153,14 @@ def validate_settings(settings: Settings) -> None:
         raise SettingsValidationError("缺少必填字段: evaluation.provider")
     if not settings.observability.level:
         raise SettingsValidationError("缺少必填字段: observability.level")
+    if settings.ingestion.chunk_refiner.prompt_path is None or not str(
+        settings.ingestion.chunk_refiner.prompt_path
+    ).strip():
+        raise SettingsValidationError("缺少必填字段: ingestion.chunk_refiner.prompt_path")
+    if settings.ingestion.metadata_enricher.prompt_path is None or not str(
+        settings.ingestion.metadata_enricher.prompt_path
+    ).strip():
+        raise SettingsValidationError("缺少必填字段: ingestion.metadata_enricher.prompt_path")
 
 
 def _read_yaml(path: str) -> dict[str, object]:
@@ -141,6 +184,7 @@ def _build_settings(raw_data: dict[str, object]) -> Settings:
     evaluation = _build_provider_settings(raw_data, "evaluation")
     retrieval = _build_retrieval_settings(raw_data)
     observability = _build_observability_settings(raw_data)
+    ingestion = _build_ingestion_settings(raw_data)
 
     return Settings(
         llm=llm,
@@ -152,6 +196,7 @@ def _build_settings(raw_data: dict[str, object]) -> Settings:
         rerank=rerank,
         evaluation=evaluation,
         observability=observability,
+        ingestion=ingestion,
     )
 
 
@@ -183,6 +228,55 @@ def _build_observability_settings(raw_data: dict[str, object]) -> ObservabilityS
     section_data = _require_mapping(raw_data, "observability")
     level = _require_string(section_data, "observability.level", "level")
     return ObservabilitySettings(level=level)
+
+
+def _build_ingestion_settings(raw_data: dict[str, object]) -> IngestionSettings:
+    section = raw_data.get("ingestion")
+    if section is None:
+        return IngestionSettings()
+    if not isinstance(section, dict):
+        raise SettingsValidationError("缺少必填字段: ingestion")
+
+    chunk_refiner_section = section.get("chunk_refiner") or {}
+    if not isinstance(chunk_refiner_section, dict):
+        raise SettingsValidationError("缺少必填字段: ingestion.chunk_refiner")
+
+    use_llm = chunk_refiner_section.get("use_llm", False)
+    if not isinstance(use_llm, bool):
+        raise SettingsValidationError("字段非法: ingestion.chunk_refiner.use_llm 必须是 bool")
+
+    prompt_path = chunk_refiner_section.get(
+        "prompt_path", ChunkRefinerSettings().prompt_path
+    )
+    if not isinstance(prompt_path, str) or not prompt_path.strip():
+        raise SettingsValidationError("缺少必填字段: ingestion.chunk_refiner.prompt_path")
+
+    metadata_enricher_section = section.get("metadata_enricher") or {}
+    if not isinstance(metadata_enricher_section, dict):
+        raise SettingsValidationError("缺少必填字段: ingestion.metadata_enricher")
+
+    metadata_use_llm = metadata_enricher_section.get("use_llm", False)
+    if not isinstance(metadata_use_llm, bool):
+        raise SettingsValidationError(
+            "字段非法: ingestion.metadata_enricher.use_llm 必须是 bool"
+        )
+
+    metadata_prompt_path = metadata_enricher_section.get(
+        "prompt_path", MetadataEnricherSettings().prompt_path
+    )
+    if not isinstance(metadata_prompt_path, str) or not metadata_prompt_path.strip():
+        raise SettingsValidationError("缺少必填字段: ingestion.metadata_enricher.prompt_path")
+
+    return IngestionSettings(
+        chunk_refiner=ChunkRefinerSettings(
+            use_llm=use_llm,
+            prompt_path=prompt_path.strip(),
+        ),
+        metadata_enricher=MetadataEnricherSettings(
+            use_llm=metadata_use_llm,
+            prompt_path=metadata_prompt_path.strip(),
+        ),
+    )
 
 
 def _require_mapping(raw_data: dict[str, object], section: str) -> dict[str, object]:

@@ -32,6 +32,13 @@ def test_load_settings_when_valid_yaml_then_returns_settings(tmp_path: Path) -> 
               provider: custom
             observability:
               level: INFO
+            ingestion:
+              chunk_refiner:
+                use_llm: false
+                prompt_path: config/prompts/chunk_refinement.txt
+              metadata_enricher:
+                use_llm: false
+                prompt_path: config/prompts/metadata_enricher.txt
             """
         ).strip(),
         encoding="utf-8",
@@ -41,6 +48,8 @@ def test_load_settings_when_valid_yaml_then_returns_settings(tmp_path: Path) -> 
 
     assert settings.embedding.provider == "openai"
     assert settings.retrieval.top_k == 5
+    assert settings.ingestion.chunk_refiner.use_llm is False
+    assert settings.ingestion.metadata_enricher.use_llm is False
 
 
 def test_load_settings_when_embedding_provider_missing_then_raise_readable_error(tmp_path: Path) -> None:
@@ -64,6 +73,13 @@ def test_load_settings_when_embedding_provider_missing_then_raise_readable_error
               provider: custom
             observability:
               level: INFO
+            ingestion:
+              chunk_refiner:
+                use_llm: false
+                prompt_path: config/prompts/chunk_refinement.txt
+              metadata_enricher:
+                use_llm: false
+                prompt_path: config/prompts/metadata_enricher.txt
             """
         ).strip(),
         encoding="utf-8",

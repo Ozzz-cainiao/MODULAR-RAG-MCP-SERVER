@@ -14,3 +14,10 @@ evaluation:
   provider: custom
 observability:
   level: INFO
+ingestion:
+  chunk_refiner:
+    use_llm: false
+    prompt_path: config/prompts/chunk_refinement.txt
+  metadata_enricher:
+    use_llm: false
+    prompt_path: config/prompts/metadata_enricher.txt

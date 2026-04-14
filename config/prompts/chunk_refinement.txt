@@ -1,2 +1,4 @@
 Refine the following chunk while preserving key facts and references.
 
+Chunk:
+{text}

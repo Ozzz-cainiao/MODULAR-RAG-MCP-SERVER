@@ -1,0 +1,50 @@
+[
+  {
+    "name": "typical_noise",
+    "input": "Header Title\n\nContent starts here.\n\nPage 1 of 2\n\nFooter",
+    "expected_contains": ["Content starts here."],
+    "expected_not_contains": ["Page 1 of 2"]
+  },
+  {
+    "name": "html_comments",
+    "input": "Start text. <!-- comment should be removed --> End text.",
+    "expected_contains": ["Start text.", "End text."],
+    "expected_not_contains": ["comment should be removed"]
+  },
+  {
+    "name": "excess_whitespace",
+    "input": "Line one.\n\n\n\nLine two.",
+    "expected_contains": ["Line one.", "Line two."],
+    "expected_not_contains": ["\n\n\n"]
+  },
+  {
+    "name": "header_footer_lines",
+    "input": "Report Name\n---\nBody text\n---\nPage 2",
+    "expected_contains": ["Body text"],
+    "expected_not_contains": ["---", "Page 2"]
+  },
+  {
+    "name": "clean_text",
+    "input": "Clean content with no noise.",
+    "expected_contains": ["Clean content with no noise."],
+    "expected_not_contains": []
+  },
+  {
+    "name": "mixed_noise",
+    "input": "Title\n\n<!-- hidden -->\n\nMain body.\n\nPage 3 of 3",
+    "expected_contains": ["Main body."],
+    "expected_not_contains": ["hidden", "Page 3 of 3"]
+  },
+  {
+    "name": "code_block",
+    "input": "Intro text.\n\n```python\n# keep me\nprint('ok')\n```\n\nFooter",
+    "expected_contains": ["# keep me", "print('ok')"],
+    "expected_not_contains": []
+  },
+  {
+    "name": "multiple_spaces",
+    "input": "Too    many     spaces.",
+    "expected_contains": ["Too many spaces."],
+    "expected_not_contains": ["  "]
+  }
+]

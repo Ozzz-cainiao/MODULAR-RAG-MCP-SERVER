@@ -2035,8 +2035,8 @@ dashboard:
 | C2 | 文件完整性检查（SHA256） | [x] | 2026-03-08 | auto-coder C2 |
 | C3 | Loader 抽象基类与 PDF Loader | [x] | 2026-04-14 | auto-coder C3 |
 | C4 | Splitter 集成（调用 Libs） | [x] | 2026-04-14 | auto-coder C4 |
-| C5 | Transform 基类 + ChunkRefiner | [ ] | - |  |
-| C6 | MetadataEnricher | [ ] | - |  |
+| C5 | Transform 基类 + ChunkRefiner | [~] | 2026-04-14 | LLM 集成测试待配置 |
+| C6 | MetadataEnricher | [~] | 2026-04-14 | LLM 集成测试待配置 |
 | C7 | ImageCaptioner | [ ] | - |  |
 | C8 | DenseEncoder | [ ] | - |  |
 | C9 | SparseEncoder | [ ] | - |  |
