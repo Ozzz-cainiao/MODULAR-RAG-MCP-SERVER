@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 import sqlite3
 from typing import Any
@@ -15,8 +16,8 @@ class ImageStorage:
         image_root_dir: str = "data/images",
         db_path: str = "data/db/image_index.db",
     ) -> None:
-        self.image_root_dir = Path(image_root_dir)
-        self.db_path = Path(db_path)
+        self.image_root_dir = Path(os.getenv("IMAGE_ROOT_DIR", image_root_dir))
+        self.db_path = Path(os.getenv("IMAGE_INDEX_DB_PATH", db_path))
         self.image_root_dir.mkdir(parents=True, exist_ok=True)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._initialize_database()

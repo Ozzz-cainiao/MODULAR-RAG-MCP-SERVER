@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from math import log
+import os
 from pathlib import Path
 import pickle
 import re
@@ -29,7 +30,8 @@ class BM25Indexer:
     """Build, persist, load, and query a lightweight BM25 index."""
 
     def __init__(self, persist_dir: str = "data/db/bm25") -> None:
-        self._persist_dir = Path(persist_dir)
+        resolved_persist_dir = os.getenv("BM25_PERSIST_PATH", persist_dir)
+        self._persist_dir = Path(resolved_persist_dir)
         self._index_path = self._persist_dir / _INDEX_FILENAME
         self._postings: dict[str, dict[str, Any]] = {}
         self._documents: dict[str, dict[str, Any]] = {}

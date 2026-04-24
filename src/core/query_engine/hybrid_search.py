@@ -65,21 +65,47 @@ class HybridSearch:
                 },
             )
 
-        dense_results = self._dense_retriever.search(processed_query, top_k=limit, trace=trace)
-        sparse_results = self._sparse_retriever.search(processed_query, top_k=limit, trace=trace)
-        fused_results = self._fusion.fuse(dense_results, sparse_results, top_k=limit)
+        dense_results: list[RetrievalResult]
+        sparse_results: list[RetrievalResult]
+        dense_error: str | None = None
+        sparse_error: str | None = None
+
+        try:
+            dense_results = self._dense_retriever.search(processed_query, top_k=limit, trace=trace)
+        except Exception as error:
+            dense_results = []
+            dense_error = str(error)
+
+        try:
+            sparse_results = self._sparse_retriever.search(processed_query, top_k=limit, trace=trace)
+        except Exception as error:
+            sparse_results = []
+            sparse_error = str(error)
+
+        if dense_error is not None and sparse_error is not None:
+            raise RuntimeError(
+                "hybrid search failed: "
+                f"dense={dense_error}; sparse={sparse_error}"
+            )
+
+        if dense_results and sparse_results:
+            fused_results = self._fusion.fuse(dense_results, sparse_results, top_k=limit)
+        else:
+            fused_results = list((dense_results or sparse_results)[:limit])
 
         if trace is not None:
-            trace.record_stage(
-                "fusion",
-                {
-                    "method": "rrf",
-                    "provider": "rrf",
-                    "dense_count": len(dense_results),
-                    "sparse_count": len(sparse_results),
-                    "result_count": len(fused_results),
-                },
-            )
+            metadata = {
+                "method": "rrf" if dense_results and sparse_results else "single_path_fallback",
+                "provider": "rrf" if dense_results and sparse_results else "fallback",
+                "dense_count": len(dense_results),
+                "sparse_count": len(sparse_results),
+                "result_count": len(fused_results),
+            }
+            if dense_error is not None:
+                metadata["dense_error"] = dense_error
+            if sparse_error is not None:
+                metadata["sparse_error"] = sparse_error
+            trace.record_stage("fusion", metadata)
 
         return HybridSearchResult(
             processed_query=processed_query,

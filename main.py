@@ -2,22 +2,12 @@
 
 from __future__ import annotations
 
-from core.settings import SettingsValidationError, load_settings
-from observability.logger import get_logger
-
-
 def main() -> int:
-    """加载配置并在配置无效时快速失败。"""
-    logger = get_logger("bootstrap")
+    """启动 MCP server。"""
 
-    try:
-        settings = load_settings("config/settings.yaml")
-    except (FileNotFoundError, SettingsValidationError) as error:
-        logger.error("Failed to load settings: %s", error)
-        return 1
+    from mcp_server.server import main as server_main
 
-    logger.info("Settings loaded successfully. LLM provider: %s", settings.llm.provider)
-    return 0
+    return server_main()
 
 
 if __name__ == "__main__":
