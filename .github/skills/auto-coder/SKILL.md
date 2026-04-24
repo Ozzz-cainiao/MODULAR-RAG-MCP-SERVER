@@ -25,22 +25,22 @@ Sync Spec → Find Task → Implement → Test (≤3 fix rounds) → Persist
 
 Only pause at the very end for commit confirmation. Everything else runs autonomously.
 
-> **⚠️ CRITICAL: ALL Python commands MUST run inside the project venv.**
-> Before executing ANY `python` or `pytest` command, activate the venv first:
-> ```powershell
-> .\.venv\Scripts\Activate.ps1
+> **⚠️ CRITICAL: ALL Python commands MUST run through `uv`.**
+> Before executing ANY `python` or `pytest` command, ensure dependencies are synced:
+> ```bash
+> uv sync
 > ```
-> Verify by checking `Get-Command python` points to `.venv\Scripts\python.exe`.
-> **Never use system Python. Never skip this step.**
+> Then run commands with `uv run ...`.
+> **Never use system Python directly. Never skip this step.**
 
 ---
 
 ### 1. Sync Spec
 
-Activate venv first, then sync:
-```powershell
-.\.venv\Scripts\Activate.ps1
-python .github/skills/auto-coder/scripts/sync_spec.py
+Sync dependencies first, then sync spec:
+```bash
+uv sync
+uv run python .github/skills/auto-coder/scripts/sync_spec.py
 ```
 
 Then read the schedule file to get task statuses:
@@ -96,7 +96,7 @@ Quick-check predecessor artifacts exist (file-level only). On mismatch, log warn
 ```
 
 Round 0..2:
-  Run pytest on relevant test file
+  Run `uv run pytest` on relevant test file
   If pass → go to step 5
   If fail → analyze error, apply fix, re-run
 
@@ -108,7 +108,7 @@ Round 3 still failing → STOP, show failure report to user
 ### 5. Persist
 
 1. **Update `DEV_SPEC.md`** (global file): change task marker `[ ]` → `[x]`
-2. **Re-sync**: `python .github/skills/auto-coder/scripts/sync_spec.py --force`
+2. **Re-sync**: `uv run python .github/skills/auto-coder/scripts/sync_spec.py --force`
 3. **Show summary & ask**:
 
 ```
@@ -132,7 +132,7 @@ On "next", loop back to step 1 for the next task.
 - Spec is single source of truth
 - 3-round test fix limit
 - Match existing codebase style
-- **MUST activate `.venv` before ANY `python`/`pytest` command** — no exceptions. If unsure whether venv is active, run `.\.venv\Scripts\Activate.ps1` again (idempotent)
+- **MUST use `uv run` before ANY `python`/`pytest` command** — no exceptions. If unsure whether environment is ready, run `uv sync` again (idempotent)
 
 ---
 

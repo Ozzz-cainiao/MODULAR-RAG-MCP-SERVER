@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 import json
+from pathlib import Path
 import re
 from typing import Any
 
@@ -34,6 +35,7 @@ class MetadataEnricher(BaseTransform):
             prompt_path or settings.ingestion.metadata_enricher.prompt_path
         )
         self._prompt_template = self._load_prompt(self._prompt_path)
+        self._resolved_llm = llm
 
     def transform(self, chunks: list[Chunk], trace: TraceContext | None = None) -> list[Chunk]:
         enriched: list[Chunk] = []
@@ -60,7 +62,7 @@ class MetadataEnricher(BaseTransform):
             metadata["metadata_enriched_by"] = "rule"
             return self._build_chunk(chunk, metadata)
 
-        llm_metadata = self._llm_metadata(chunk.text)
+        llm_metadata = self._llm_metadata(chunk.text, trace)
         if llm_metadata is None:
             metadata.update(rule_metadata)
             metadata["metadata_enriched_by"] = "rule"
@@ -111,21 +113,43 @@ class MetadataEnricher(BaseTransform):
                 break
         return unique or ["general"]
 
-    def _llm_metadata(self, text: str) -> dict[str, Any] | None:
-        llm = self._llm or LLMFactory.create(self._settings)
+    def _llm_metadata(
+        self, text: str, trace: TraceContext | None = None
+    ) -> dict[str, Any] | None:
+        llm = self._get_llm()
         prompt = self._prompt_template.format(text=text)
         messages = [{"role": "user", "content": prompt}]
         try:
             response = llm.chat(messages)
-        except Exception:
+        except Exception as error:
+            if trace is not None:
+                trace.record_stage(
+                    "metadata_enricher_llm",
+                    {"status": "error", "error_type": type(error).__name__},
+                )
             return None
         if not isinstance(response, str) or not response.strip():
+            if trace is not None:
+                trace.record_stage(
+                    "metadata_enricher_llm",
+                    {"status": "empty_response"},
+                )
             return None
         try:
             payload = json.loads(response)
         except json.JSONDecodeError:
+            if trace is not None:
+                trace.record_stage(
+                    "metadata_enricher_llm",
+                    {"status": "invalid_json"},
+                )
             return None
         if not isinstance(payload, dict):
+            if trace is not None:
+                trace.record_stage(
+                    "metadata_enricher_llm",
+                    {"status": "invalid_payload_type"},
+                )
             return None
         title = payload.get("title")
         summary = payload.get("summary")
@@ -139,15 +163,27 @@ class MetadataEnricher(BaseTransform):
         normalized_tags = [tag for tag in tags if isinstance(tag, str) and tag.strip()]
         if not normalized_tags:
             return None
+        if trace is not None:
+            trace.record_stage(
+                "metadata_enricher_llm",
+                {"status": "success", "tag_count": len(normalized_tags)},
+            )
         return {
             "title": title.strip(),
             "summary": summary.strip(),
             "tags": normalized_tags,
         }
 
-    def _load_prompt(self, path: str) -> str:
+    def _get_llm(self) -> BaseLLM:
+        if self._resolved_llm is None:
+            self._resolved_llm = LLMFactory.create(self._settings)
+        return self._resolved_llm
+
+    def _load_prompt(self, path: str | None) -> str:
+        if not path:
+            return "Generate JSON with title, summary, tags for:\n\n{text}"
         try:
-            with open(path, "r", encoding="utf-8") as handle:
+            with Path(path).open("r", encoding="utf-8") as handle:
                 template = handle.read()
         except FileNotFoundError:
             template = "Generate JSON with title, summary, tags for:\n\n{text}"

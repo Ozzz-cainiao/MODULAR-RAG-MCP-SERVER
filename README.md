@@ -24,6 +24,45 @@
 
 ---
 
+## ⚡ 使用 uv 管理项目
+
+本项目现在默认使用 `uv` 管理虚拟环境、依赖安装和命令执行。
+项目内已默认配置清华 PyPI 镜像源，所以直接执行 `uv` 命令即可。
+
+### 1. 安装依赖
+
+```bash
+uv sync
+```
+
+这会在项目目录下创建 `.venv`，并同步默认依赖组；当前默认会一起安装 `dev` 组。
+
+### 2. 运行测试
+
+```bash
+uv run pytest
+```
+
+如果只想跑某一组测试：
+
+```bash
+uv run pytest tests/unit/test_chunk_refiner.py -v
+```
+
+### 3. 运行入口
+
+```bash
+uv run mcp-server
+```
+
+如果需要执行脚本或 Python 命令，也统一使用：
+
+```bash
+uv run python main.py
+```
+
+---
+
 ## 🏗️ 项目概览
 
 - **Ingestion Pipeline**：PDF → Markdown → Chunk → Transform → Embedding → Upsert（支持多模态图片描述）

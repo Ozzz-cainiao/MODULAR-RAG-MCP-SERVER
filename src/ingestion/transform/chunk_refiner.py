@@ -1,8 +1,9 @@
-"""ChunkRefiner 实现。"""
+"""ChunkRefiner implementation for rule-based cleanup and optional LLM refinement."""
 
 from __future__ import annotations
 
 from copy import deepcopy
+from pathlib import Path
 import re
 from typing import Any
 
@@ -39,6 +40,7 @@ class ChunkRefiner(BaseTransform):
         )
         self._use_llm = settings.ingestion.chunk_refiner.use_llm
         self._prompt_template = self._load_prompt(self._prompt_path)
+        self._resolved_llm = llm
 
     def transform(self, chunks: list[Chunk], trace: TraceContext | None = None) -> list[Chunk]:
         """执行 Chunk 精炼。"""
@@ -73,7 +75,7 @@ class ChunkRefiner(BaseTransform):
             metadata["refined_by"] = "rule"
             return self._build_chunk(chunk, rule_text, metadata)
 
-        llm_text = self._llm_refine(rule_text)
+        llm_text = self._llm_refine(rule_text, trace)
         if llm_text is None:
             metadata["refined_by"] = "rule"
             metadata["refine_fallback_reason"] = "llm_failed_or_empty"
@@ -127,23 +129,46 @@ class ChunkRefiner(BaseTransform):
             segments.append("```" + part)
         return segments
 
-    def _llm_refine(self, text: str) -> str | None:
-        llm = self._llm or LLMFactory.create(self._settings)
+    def _llm_refine(self, text: str, trace: TraceContext | None = None) -> str | None:
+        llm = self._get_llm()
         prompt = self._prompt_template.format(text=text)
         messages = [
             {"role": "user", "content": prompt},
         ]
         try:
             response = llm.chat(messages)
-        except Exception:
+        except Exception as error:
+            if trace is not None:
+                trace.record_stage(
+                    "chunk_refiner_llm",
+                    {"status": "error", "error_type": type(error).__name__},
+                )
             return None
         if not isinstance(response, str) or not response.strip():
+            if trace is not None:
+                trace.record_stage(
+                    "chunk_refiner_llm",
+                    {"status": "empty_response"},
+                )
             return None
+        if trace is not None:
+            trace.record_stage(
+                "chunk_refiner_llm",
+                {"status": "success", "output_length": len(response.strip())},
+            )
         return response.strip()
 
-    def _load_prompt(self, path: str) -> str:
+    def _get_llm(self) -> BaseLLM:
+        if self._resolved_llm is None:
+            self._resolved_llm = LLMFactory.create(self._settings)
+        return self._resolved_llm
+
+    def _load_prompt(self, path: str | None) -> str:
+        if not path:
+            template = "Refine the following chunk while preserving key facts.\n\n{text}"
+            return template
         try:
-            with open(path, "r", encoding="utf-8") as handle:
+            with Path(path).open("r", encoding="utf-8") as handle:
                 template = handle.read()
         except FileNotFoundError:
             template = "Refine the following chunk while preserving key facts.\n\n{text}"

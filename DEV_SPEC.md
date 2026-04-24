@@ -2037,15 +2037,15 @@ dashboard:
 | C4 | Splitter 集成（调用 Libs） | [x] | 2026-04-14 | auto-coder C4 |
 | C5 | Transform 基类 + ChunkRefiner | [~] | 2026-04-14 | LLM 集成测试待配置 |
 | C6 | MetadataEnricher | [~] | 2026-04-14 | LLM 集成测试待配置 |
-| C7 | ImageCaptioner | [ ] | - |  |
-| C8 | DenseEncoder | [ ] | - |  |
-| C9 | SparseEncoder | [ ] | - |  |
-| C10 | BatchProcessor | [ ] | - |  |
-| C11 | BM25Indexer（倒排索引+IDF计算） | [ ] | - |  |
-| C12 | VectorUpserter（幂等upsert） | [ ] | - |  |
-| C13 | ImageStorage（图片存储+SQLite索引） | [ ] | - |  |
-| C14 | Pipeline 编排（MVP 串起来） | [ ] | - |  |
-| C15 | 脚本入口 ingest.py | [ ] | - |  |
+| C7 | ImageCaptioner | [x] | 2026-04-23 | Vision LLM caption生成+降级fallback+6个单元测试 |
+| C8 | DenseEncoder | [x] | 2026-04-23 | BaseEmbedding集成+数量/维度校验+5个单元测试 |
+| C9 | SparseEncoder | [x] | 2026-04-23 | term-weight输出+空文本显式行为+5个单元测试 |
+| C10 | BatchProcessor | [x] | 2026-04-23 | Dense/Sparse批处理编排+批次trace+4个单元测试 |
+| C11 | BM25Indexer（倒排索引+IDF计算） | [x] | 2026-04-23 | Pickle持久化+IDF计算+roundtrip/增量更新测试 |
+| C12 | VectorUpserter（幂等upsert） | [x] | 2026-04-23 | 稳定chunk_id+幂等批量upsert+5个单元测试 |
+| C13 | ImageStorage（图片存储+SQLite索引） | [x] | 2026-04-23 | 文件落盘+SQLite映射+WAL模式+4个单元测试 |
+| C14 | Pipeline 编排（MVP 串起来） | [x] | 2026-04-23 | integrity→load→split→transform→encode→store全流程+3个集成测试 |
+| C15 | 脚本入口 ingest.py | [x] | 2026-04-23 | CLI入口+skip/summary输出+2个E2E测试 |
 
 #### 阶段 D：Retrieval MVP
 

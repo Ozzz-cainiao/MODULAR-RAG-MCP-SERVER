@@ -40,7 +40,9 @@ def test_pdf_loader_load_when_text_only_pdf_then_return_document_with_source_met
     document = loader.load(str(fixture_path))
 
     assert document.text == "# 简单文档\n\n这是一段 PDF 文本。"
-    assert document.metadata["source_path"].endswith("tests\\fixtures\\sample_documents\\simple.pdf")
+    source_path = Path(document.metadata["source_path"])
+    assert source_path.name == "simple.pdf"
+    assert source_path.parts[-3:] == ("fixtures", "sample_documents", "simple.pdf")
     assert document.metadata["doc_type"] == "pdf"
     assert document.metadata["images"] == []
     assert len(document.id) == 64
@@ -100,4 +102,3 @@ def test_pdf_loader_load_when_image_extractor_fails_then_continue_without_images
 
     assert document.text == "仅保留文本内容。"
     assert document.metadata["images"] == []
-
