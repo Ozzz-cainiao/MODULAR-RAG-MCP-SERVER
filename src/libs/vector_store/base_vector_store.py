@@ -73,3 +73,27 @@ class BaseVectorStore(ABC):
         返回:
             与输入顺序一致的结果列表，不存在的 chunk_id 会被忽略。
         """
+        raise NotImplementedError
+
+    def get_by_metadata(
+        self,
+        filters: dict[str, Any] | None = None,
+        trace: TraceContext | None = None,
+    ) -> list[VectorQueryResult]:
+        """按 metadata 过滤获取记录。"""
+
+        raise NotImplementedError
+
+    def delete_by_metadata(
+        self,
+        filters: dict[str, Any],
+        trace: TraceContext | None = None,
+    ) -> int:
+        """按 metadata 条件删除记录并返回删除数量。"""
+
+        raise NotImplementedError
+
+    def get_collection_stats(self, trace: TraceContext | None = None) -> dict[str, Any]:
+        """返回集合维度的统计信息。"""
+
+        raise NotImplementedError

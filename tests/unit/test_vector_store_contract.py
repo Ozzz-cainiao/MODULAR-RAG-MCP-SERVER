@@ -172,3 +172,28 @@ def test_vector_store_factory_create_when_provider_missing_then_raise_readable_e
 
     with pytest.raises(ValueError, match="not-registered-vector-store"):
         VectorStoreFactory.create(settings)
+
+
+def test_vector_store_contract_when_delete_by_metadata_then_remove_matching_records() -> None:
+    provider = "fake-vector-b4-delete"
+    VectorStoreFactory.register(provider, FakeVectorStore)
+    store = VectorStoreFactory.create(_build_settings(provider))
+    store.upsert(
+        [
+            {
+                "chunk_id": "c1",
+                "vector": [1.0],
+                "text": "one",
+                "metadata": {"collection": "docs"},
+            },
+            {
+                "chunk_id": "c2",
+                "vector": [1.0],
+                "text": "two",
+                "metadata": {"collection": "faq"},
+            },
+        ]
+    )
+
+    with pytest.raises(NotImplementedError):
+        store.delete_by_metadata({"collection": "docs"})

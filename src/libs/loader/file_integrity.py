@@ -122,6 +122,33 @@ class SQLiteIntegrityChecker(FileIntegrityChecker):
             conn.execute(sql, (normalized_hash, normalized_error))
             conn.commit()
 
+    def remove_record(self, file_path: str) -> int:
+        """Remove ingestion history rows by file path."""
+
+        normalized_path = self._require_non_empty_string(file_path, "file_path")
+        with self._get_connection() as conn:
+            cursor = conn.execute("DELETE FROM ingestion_history WHERE file_path = ?", (normalized_path,))
+            conn.commit()
+            return int(cursor.rowcount)
+
+    def list_processed(self) -> list[dict[str, str]]:
+        """Return processed ingestion records."""
+
+        with self._get_connection() as conn:
+            rows = conn.execute(
+                "SELECT file_hash, file_path, status, COALESCE(error_msg, '') FROM ingestion_history "
+                "ORDER BY updated_at DESC, file_path ASC"
+            ).fetchall()
+        return [
+            {
+                "file_hash": str(row[0]),
+                "file_path": str(row[1]),
+                "status": str(row[2]),
+                "error_msg": str(row[3]),
+            }
+            for row in rows
+        ]
+
     def _initialize_database(self) -> None:
         with self._get_connection() as conn:
             conn.execute(
@@ -151,4 +178,3 @@ class SQLiteIntegrityChecker(FileIntegrityChecker):
         if not isinstance(value, str) or not value.strip():
             raise ValueError(f"{field_name} 必须是非空字符串")
         return value.strip()
-

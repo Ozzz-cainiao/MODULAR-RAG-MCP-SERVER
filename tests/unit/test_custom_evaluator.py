@@ -12,6 +12,7 @@ from core.settings import (
 )
 from libs.evaluator.custom_evaluator import CustomEvaluator
 from libs.evaluator.evaluator_factory import EvaluatorFactory
+from observability.evaluation.composite_evaluator import CompositeEvaluator
 
 
 def _build_settings(provider: str) -> Settings:
@@ -76,3 +77,19 @@ def test_evaluator_factory_create_when_provider_missing_then_raise_readable_erro
     with pytest.raises(ValueError, match="not-registered-evaluator"):
         EvaluatorFactory.create(settings)
 
+
+def test_custom_evaluator_evaluate_when_golden_ids_empty_then_return_zero_metrics() -> None:
+    settings = _build_settings("custom")
+    evaluator = CustomEvaluator(settings)
+
+    metrics = evaluator.evaluate(query="q", retrieved_ids=["a"], golden_ids=[])
+
+    assert metrics == {"hit_rate": 0.0, "mrr": 0.0}
+
+
+def test_evaluator_factory_create_composite_when_two_backends_then_return_composite() -> None:
+    settings = _build_settings("custom")
+
+    evaluator = EvaluatorFactory.create_composite(settings, ["custom", "ragas"])
+
+    assert isinstance(evaluator, CompositeEvaluator)

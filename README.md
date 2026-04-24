@@ -1,89 +1,172 @@
 # Modular RAG MCP Server
 
-> 一个可插拔、可观测的模块化 RAG (检索增强生成) 服务框架，通过 MCP (Model Context Protocol) 协议对外暴露工具接口，支持 Copilot / Claude 等 AI 助手直接调用。
+一个可插拔、可观测、可评估的模块化 RAG 工程，支持离线摄取、混合检索、MCP Tools、Dashboard 可视化和 golden set 回归评估。
 
----
+## 快速开始
 
-## ⚠️ 项目状态：开发中 (Work In Progress)
-
-**本项目尚未完成**，预计 2026 年 3 月完成全部开发。
-
-当前阶段 README 仅提供分支说明，关于项目安装、配置、启动方式等完整文档将在项目完成后补充。`requirements` / `pyproject.toml` 中的依赖列表也可能随开发进展调整，不代表最终版本。
-
----
-
-## 📂 分支说明
-
-本仓库包含三个分支，各有不同用途：
-
-| 分支 | 用途 | 说明 |
-|------|------|------|
-| **`main`** | 最新代码 | 始终只有 **1 个 commit**，包含项目的最新完整代码。适合想直接查看最终代码的用户。 |
-| **`dev`** | 开发过程记录 | 保留了完整的 commit 历史，记录了从零开始逐步构建整个项目的过程。适合想了解项目是如何一步步搭建的用户。 |
-| **`clean-start`** | 干净起点 | 仅包含工程骨架（Skills + DEV_SPEC），DEV_SPEC 中的任务进度全部清零。**适合想从零开始自己动手实现的用户**——fork 此分支，按照 DEV_SPEC 的排期逐步完成即可。 |
-
----
-
-## ⚡ 使用 uv 管理项目
-
-本项目现在默认使用 `uv` 管理虚拟环境、依赖安装和命令执行。
-项目内已默认配置清华 PyPI 镜像源，所以直接执行 `uv` 命令即可。
-
-### 1. 安装依赖
+项目默认使用 `uv` 管理环境，并已配置清华 PyPI 镜像。
 
 ```bash
 uv sync
 ```
 
-这会在项目目录下创建 `.venv`，并同步默认依赖组；当前默认会一起安装 `dev` 组。
+常见运行命令：
 
-### 2. 运行测试
+```bash
+uv run pytest
+uv run python scripts/ingest.py --collection demo --path tests/fixtures/sample_documents/simple.pdf
+uv run python scripts/query.py --query "Azure deployment guide" --verbose
+uv run python scripts/evaluate.py
+uv run python scripts/start_dashboard.py
+uv run mcp-server
+```
+
+## 配置说明
+
+主配置文件是 `config/settings.yaml`，当前核心字段：
+
+- `llm.provider`：LLM 后端
+- `embedding.provider`：Embedding 后端
+- `splitter.provider`：切分器后端
+- `vector_store.provider`：向量库后端
+- `retrieval.top_k`：默认召回条数
+- `rerank.provider`：Reranker 后端
+- `evaluation.provider`：Evaluator 后端
+- `observability.level`：日志级别
+
+常用环境变量：
+
+- `OPENAI_API_KEY`
+- `OPENAI_BASE_URL`
+- `OPENAI_EMBEDDING_MODEL`
+- `CHROMA_PERSIST_PATH`
+- `BM25_PERSIST_PATH`
+- `IMAGE_ROOT_DIR`
+- `IMAGE_INDEX_DB_PATH`
+
+## MCP 配置示例
+
+GitHub Copilot / 其他 MCP Client 可将项目 server 配置为：
+
+```json
+{
+  "servers": {
+    "modular-rag": {
+      "command": "uv",
+      "args": ["run", "mcp-server"]
+    }
+  }
+}
+```
+
+Claude Desktop 风格配置可写成：
+
+```json
+{
+  "mcpServers": {
+    "modular-rag": {
+      "command": "uv",
+      "args": ["run", "mcp-server"]
+    }
+  }
+}
+```
+
+当前 MCP tools：
+
+- `query_knowledge_hub`
+- `list_collections`
+- `get_document_summary`
+
+## Dashboard 使用
+
+启动命令：
+
+```bash
+uv run python scripts/start_dashboard.py
+```
+
+页面包括：
+
+- `Overview`：当前系统配置概览
+- `Data Browser`：浏览已摄取文档与 chunk
+- `Ingestion Manager`：查看 ingestion 入口与文档总量
+- `Ingestion Traces`：查看 ingestion trace
+- `Query Traces`：查看 query trace
+- `Evaluation Panel`：运行和查看评估
+
+Dashboard 基于 `streamlit`，若本地尚未安装，脚本会给出提示。
+
+## 评估体系
+
+支持的评估组件：
+
+- `CustomEvaluator`：提供 `hit_rate` 和 `mrr`
+- `RagasEvaluator`：提供 `faithfulness`、`answer_relevancy`、`context_precision`
+- `CompositeEvaluator`：组合多个 evaluator
+
+golden test set 位于：
+
+`tests/fixtures/golden_test_set.json`
+
+运行评估：
+
+```bash
+uv run python scripts/evaluate.py --test-set tests/fixtures/golden_test_set.json
+```
+
+## 测试说明
+
+全部测试：
 
 ```bash
 uv run pytest
 ```
 
-如果只想跑某一组测试：
+定向测试示例：
 
 ```bash
-uv run pytest tests/unit/test_chunk_refiner.py -v
+uv run pytest tests/unit -q
+uv run pytest tests/integration -q
+uv run pytest tests/e2e -q
 ```
 
-### 3. 运行入口
+需要真实 API Key 的集成测试在缺少环境变量时会自动跳过。
+
+## 常见问题
+
+### 1. `uv sync` 失败
+
+优先确认当前 Python 版本满足项目要求 `>=3.11`，并确认网络可访问或镜像源配置正确。
+
+### 2. 查询没有结果
+
+先运行 ingestion：
 
 ```bash
-uv run mcp-server
+uv run python scripts/ingest.py --collection demo --path tests/fixtures/sample_documents/simple.pdf
 ```
 
-如果需要执行脚本或 Python 命令，也统一使用：
+### 3. Dashboard 无法启动
 
-```bash
-uv run python main.py
-```
+需要先安装 `streamlit`。如果当前环境没有该依赖，`scripts/start_dashboard.py` 会直接提示。
 
----
+### 4. MCP tool 调用失败
 
-## 🏗️ 项目概览
+确认 `uv run mcp-server` 能正常启动，并检查 `stderr` 中的日志输出。
 
-- **Ingestion Pipeline**：PDF → Markdown → Chunk → Transform → Embedding → Upsert（支持多模态图片描述）
-- **Hybrid Search**：Dense (向量) + Sparse (BM25) + RRF Fusion + 可选 Rerank
-- **MCP Server**：通过标准 MCP 协议暴露 `query_knowledge_hub`、`list_collections`、`get_document_summary` 三个 Tools
-- **Dashboard**：Streamlit 六页面管理平台（系统总览 / 数据浏览 / Ingestion 管理 / 追踪可视化 / 评估面板）
-- **Evaluation**：Ragas + Custom 评估体系，支持 golden test set 回归测试
+## 项目状态
 
-> 📖 详细架构设计和任务排期请参阅 [DEV_SPEC.md](DEV_SPEC.md)
+当前开发排期已经全部完成：
 
----
+- A：工程骨架
+- B：可插拔抽象层
+- C：Ingestion Pipeline
+- D：Hybrid Retrieval
+- E：MCP Server 与 Tools
+- F：Trace / Observability 基础设施
+- G：Dashboard 管理平台
+- H：Evaluation 评估体系
+- I：E2E 验收与文档收口
 
-## 📄 License
-
-## 🏗️ 当前骨架状态
-
-当前已完成阶段 A1（工程骨架初始化）：
-
-- 已创建 `src/` 下核心包目录与 `__init__.py`，支持顶层模块导入
-- 已创建 `config/settings.yaml` 与 `config/prompts/` 三个提示词模板
-- 已补齐 `pyproject.toml`、`main.py`、`.gitignore` 等基础工程文件
-- 已创建 `data/`、`cache/`、`logs/`、`tests/`、`scripts/` 基础目录
-
-MIT
+详细排期见 [DEV_SPEC.md](DEV_SPEC.md)。

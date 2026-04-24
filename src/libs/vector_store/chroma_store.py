@@ -127,6 +127,53 @@ class ChromaStore(BaseVectorStore):
                 ordered_results.append(dict(payload))
         return ordered_results
 
+    def get_by_metadata(
+        self,
+        filters: dict[str, Any] | None = None,
+        trace: TraceContext | None = None,
+    ) -> list[VectorQueryResult]:
+        """按 metadata 条件筛选记录。"""
+
+        filtered_records = [record for record in self._records if self._match_filters(record, filters)]
+        return [
+            {
+                "chunk_id": str(record["chunk_id"]),
+                "score": 0.0,
+                "text": str(record["text"]),
+                "metadata": dict(record["metadata"]),
+            }
+            for record in filtered_records
+        ]
+
+    def delete_by_metadata(
+        self,
+        filters: dict[str, Any],
+        trace: TraceContext | None = None,
+    ) -> int:
+        """删除满足 metadata 条件的记录。"""
+
+        before = len(self._records)
+        self._records = [record for record in self._records if not self._match_filters(record, filters)]
+        deleted = before - len(self._records)
+        if deleted:
+            self._save_records()
+        return deleted
+
+    def get_collection_stats(self, trace: TraceContext | None = None) -> dict[str, Any]:
+        """返回集合统计信息。"""
+
+        collections: dict[str, int] = {}
+        for record in self._records:
+            metadata = record.get("metadata", {})
+            if not isinstance(metadata, dict):
+                continue
+            collection = str(metadata.get("collection", "default"))
+            collections[collection] = collections.get(collection, 0) + 1
+        return {
+            "total_chunks": len(self._records),
+            "collections": dict(sorted(collections.items())),
+        }
+
     def _match_filters(self, record: VectorRecord, filters: dict[str, Any] | None) -> bool:
         """判断记录是否命中过滤条件。"""
 

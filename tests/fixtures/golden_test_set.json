@@ -1,0 +1,9 @@
+{
+  "test_cases": [
+    {
+      "query": "Azure deployment guide",
+      "expected_chunk_ids": ["chunk-1"],
+      "expected_sources": ["guide.md"]
+    }
+  ]
+}

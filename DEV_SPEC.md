@@ -2084,32 +2084,32 @@ dashboard:
 
 | 任务编号 | 任务名称 | 状态 | 完成日期 | 备注 |
 |---------|---------|------|---------|------|
-| G1 | Dashboard 基础架构与系统总览页 | [ ] | - |  |
-| G2 | DocumentManager 实现 | [ ] | - |  |
-| G3 | 数据浏览器页面 | [ ] | - |  |
-| G4 | Ingestion 管理页面 | [ ] | - |  |
-| G5 | Ingestion 追踪页面 | [ ] | - |  |
-| G6 | Query 追踪页面 | [ ] | - |  |
+| G1 | Dashboard 基础架构与系统总览页 | [x] | 2026-04-24 | Streamlit多页面架构+Overview页+dashboard smoke |
+| G2 | DocumentManager 实现 | [x] | 2026-04-24 | 文档列举/详情/删除/统计+单元测试 |
+| G3 | 数据浏览器页面 | [x] | 2026-04-24 | DataService+Data Browser 页面 |
+| G4 | Ingestion 管理页面 | [x] | 2026-04-24 | Ingestion Manager 页面+进度接口复用 |
+| G5 | Ingestion 追踪页面 | [x] | 2026-04-24 | TraceService+Ingestion Traces 页面 |
+| G6 | Query 追踪页面 | [x] | 2026-04-24 | Query Traces 页面+query trace 展示 |
 
 #### 阶段 H：评估体系
 
 | 任务编号 | 任务名称 | 状态 | 完成日期 | 备注 |
 |---------|---------|------|---------|------|
-| H1 | RagasEvaluator 实现 | [ ] | - |  |
-| H2 | CompositeEvaluator 实现 | [ ] | - |  |
-| H3 | EvalRunner + Golden Test Set | [ ] | - |  |
-| H4 | 评估面板页面 | [ ] | - |  |
-| H5 | Recall 回归测试（E2E） | [ ] | - |  |
+| H1 | RagasEvaluator 实现 | [x] | 2026-04-24 | Ragas-style metrics evaluator+单元测试 |
+| H2 | CompositeEvaluator 实现 | [x] | 2026-04-24 | 多 evaluator 聚合+单元测试 |
+| H3 | EvalRunner + Golden Test Set | [x] | 2026-04-24 | EvalRunner+evaluate.py+golden fixture |
+| H4 | 评估面板页面 | [x] | 2026-04-24 | Evaluation Panel 页面 |
+| H5 | Recall 回归测试（E2E） | [x] | 2026-04-24 | golden set recall e2e 测试 |
 
 #### 阶段 I：端到端验收与文档收口
 
 | 任务编号 | 任务名称 | 状态 | 完成日期 | 备注 |
 |---------|---------|------|---------|------|
-| I1 | E2E：MCP Client 侧调用模拟 | [ ] | - | |
-| I2 | E2E：Dashboard 冒烟测试 | [ ] | - | |
-| I3 | 完善 README（运行说明 + MCP + Dashboard） | [ ] | - | |
-| I4 | 清理接口一致性（契约测试补齐） | [ ] | - | |
-| I5 | 全链路 E2E 验收 | [ ] | - | |
+| I1 | E2E：MCP Client 侧调用模拟 | [x] | 2026-04-24 | MCP client 子进程 roundtrip e2e |
+| I2 | E2E：Dashboard 冒烟测试 | [x] | 2026-04-24 | fake streamlit smoke 覆盖 app+6页面 |
+| I3 | 完善 README（运行说明 + MCP + Dashboard） | [x] | 2026-04-24 | README 重写完成快速开始/MCP/Dashboard/测试说明 |
+| I4 | 清理接口一致性（契约测试补齐） | [x] | 2026-04-24 | VectorStore/Evaluator 契约边界补测 |
+| I5 | 全链路 E2E 验收 | [x] | 2026-04-24 | pytest 全绿+ingest/query/mcp/dashboard/eval 路径收口 |
 
 ---
 

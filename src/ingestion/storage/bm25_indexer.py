@@ -136,6 +136,27 @@ class BM25Indexer:
         ranked = sorted(scores.items(), key=lambda item: (-item[1], item[0]))
         return [BM25QueryResult(chunk_id=chunk_id, score=score) for chunk_id, score in ranked[:top_k]]
 
+    def remove_document(self, source_ref: str) -> int:
+        """Remove indexed chunks for a document source_ref/doc id."""
+
+        if not isinstance(source_ref, str) or not source_ref.strip():
+            raise ValueError("source_ref 必须是非空字符串")
+
+        removed_ids = [
+            chunk_id
+            for chunk_id, payload in self._documents.items()
+            if payload.get("source_ref") == source_ref or payload.get("doc_hash") == source_ref
+        ]
+        if not removed_ids:
+            return 0
+
+        for chunk_id in removed_ids:
+            self._documents.pop(chunk_id, None)
+
+        self._rebuild_postings()
+        self.save()
+        return len(removed_ids)
+
     def _rebuild_postings(self) -> None:
         postings: dict[str, dict[str, Any]] = {}
         document_count = len(self._documents)

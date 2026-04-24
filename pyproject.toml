@@ -9,6 +9,8 @@ dependencies = [
 
 [project.scripts]
 mcp-server = "main:main"
+start-dashboard = "scripts.start_dashboard:main"
+evaluate-rag = "scripts.evaluate:main"
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]

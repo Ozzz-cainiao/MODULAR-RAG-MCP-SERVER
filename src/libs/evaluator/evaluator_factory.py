@@ -7,6 +7,8 @@ from collections.abc import Callable
 from core.settings import Settings
 from libs.evaluator.base_evaluator import BaseEvaluator
 from libs.evaluator.custom_evaluator import CustomEvaluator
+from observability.evaluation.composite_evaluator import CompositeEvaluator
+from observability.evaluation.ragas_evaluator import RagasEvaluator
 
 
 EvaluatorBuilder = Callable[[Settings], BaseEvaluator]
@@ -18,7 +20,10 @@ class EvaluatorFactory:
     通过 provider 名称路由到已注册的 Evaluator 构建器。
     """
 
-    _registry: dict[str, EvaluatorBuilder] = {"custom": CustomEvaluator}
+    _registry: dict[str, EvaluatorBuilder] = {
+        "custom": CustomEvaluator,
+        "ragas": RagasEvaluator,
+    }
 
     @classmethod
     def register(cls, provider: str, builder: EvaluatorBuilder) -> None:
@@ -58,3 +63,12 @@ class EvaluatorFactory:
 
         return builder(settings)
 
+    @classmethod
+    def create_composite(cls, settings: Settings, providers: list[str]) -> BaseEvaluator:
+        evaluators = []
+        for provider in providers:
+            builder = cls._registry.get(provider.strip().lower())
+            if builder is None:
+                raise ValueError(f"未注册的 evaluation provider: {provider}")
+            evaluators.append(builder(settings))
+        return CompositeEvaluator(settings, evaluators=evaluators)
