@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from time import perf_counter
 from typing import Protocol
 
 from core.settings import Settings
-from core.trace import TraceContext
+from core.trace import TraceCollector, TraceContext
 from core.types import Chunk, Document
 from ingestion.chunking.document_chunker import DocumentChunker
 from ingestion.embedding.batch_processor import BatchProcessor
@@ -91,15 +92,21 @@ class IngestionPipeline:
         collection: str,
         force: bool = False,
         trace: TraceContext | None = None,
+        on_progress=None,
     ) -> PipelineResult:
         """Run the end-to-end ingestion pipeline for a single document."""
 
+        owned_trace = trace is None
+        trace = trace or TraceContext(trace_type="ingestion")
         file_path = Path(path).expanduser().resolve()
         if not file_path.exists():
             raise FileNotFoundError(f"文件不存在: {file_path}")
 
         file_hash = self._integrity_checker.compute_sha256(str(file_path))
         if not force and self._integrity_checker.should_skip(file_hash):
+            if owned_trace:
+                trace.finish()
+                TraceCollector().collect(trace)
             return PipelineResult(
                 file_hash=file_hash,
                 document_id=None,
@@ -112,24 +119,74 @@ class IngestionPipeline:
             )
 
         try:
-            if trace is not None:
-                trace.record_stage("integrity", {"file_hash": file_hash, "force": force})
+            integrity_started = perf_counter()
+            trace.record_stage(
+                "integrity",
+                {
+                    "file_hash": file_hash,
+                    "force": force,
+                    "method": "sha256",
+                    "elapsed_ms": round((perf_counter() - integrity_started) * 1000, 3),
+                },
+            )
+            _report_progress(on_progress, "integrity", 1, 6)
 
+            load_started = perf_counter()
             document = self._loader.load(str(file_path))
-            if trace is not None:
-                trace.record_stage("load", {"document_id": document.id})
+            trace.record_stage(
+                "load",
+                {
+                    "document_id": document.id,
+                    "method": type(self._loader).__name__.replace("Loader", "").lower() or "loader",
+                    "elapsed_ms": round((perf_counter() - load_started) * 1000, 3),
+                },
+            )
+            _report_progress(on_progress, "load", 2, 6)
 
             stored_image_paths = self._persist_document_images(document, collection)
 
+            split_started = perf_counter()
             chunks = self._chunker.split_document(document)
             chunks = self._attach_collection(chunks, collection)
-            if trace is not None:
-                trace.record_stage("split", {"chunk_count": len(chunks)})
+            trace.record_stage(
+                "split",
+                {
+                    "chunk_count": len(chunks),
+                    "method": self._settings.splitter.provider,
+                    "elapsed_ms": round((perf_counter() - split_started) * 1000, 3),
+                },
+            )
+            _report_progress(on_progress, "split", 3, 6)
 
+            transform_started = perf_counter()
             for transform in self._transforms:
                 chunks = transform.transform(chunks, trace=trace)
+            trace.record_stage(
+                "transform",
+                {
+                    "chunk_count": len(chunks),
+                    "method": "pipeline_transforms",
+                    "transform_count": len(self._transforms),
+                    "elapsed_ms": round((perf_counter() - transform_started) * 1000, 3),
+                },
+            )
+            _report_progress(on_progress, "transform", 4, 6)
 
+            embed_started = perf_counter()
             batch_result = self._batch_processor.process(chunks, trace=trace)
+            trace.record_stage(
+                "embed",
+                {
+                    "chunk_count": len(chunks),
+                    "method": self._settings.embedding.provider,
+                    "dense_count": len(batch_result.dense_vectors),
+                    "sparse_count": len(batch_result.sparse_vectors),
+                    "elapsed_ms": round((perf_counter() - embed_started) * 1000, 3),
+                },
+            )
+            _report_progress(on_progress, "embed", 5, 6)
+
+            upsert_started = perf_counter()
             vector_ids = self._vector_upserter.upsert(
                 chunks,
                 batch_result.dense_vectors,
@@ -141,8 +198,21 @@ class IngestionPipeline:
                 trace=trace,
                 incremental=True,
             )
+            trace.record_stage(
+                "upsert",
+                {
+                    "vector_count": len(vector_ids),
+                    "image_count": len(stored_image_paths),
+                    "method": self._settings.vector_store.provider,
+                    "elapsed_ms": round((perf_counter() - upsert_started) * 1000, 3),
+                },
+            )
+            _report_progress(on_progress, "upsert", 6, 6)
 
             self._integrity_checker.mark_success(file_hash, str(file_path))
+            if owned_trace:
+                trace.finish()
+                TraceCollector().collect(trace)
             return PipelineResult(
                 file_hash=file_hash,
                 document_id=document.id,
@@ -155,6 +225,9 @@ class IngestionPipeline:
             )
         except Exception as error:
             self._integrity_checker.mark_failed(file_hash, str(error))
+            if owned_trace:
+                trace.finish()
+                TraceCollector().collect(trace)
             raise PipelineError(f"Pipeline failed at {file_path.name}: {error}") from error
 
     def _attach_collection(self, chunks: list[Chunk], collection: str) -> list[Chunk]:
@@ -204,3 +277,9 @@ class IngestionPipeline:
             stored_paths.append(stored_path)
 
         return stored_paths
+
+
+def _report_progress(on_progress, stage_name: str, current: int, total: int) -> None:
+    if on_progress is None:
+        return
+    on_progress(stage_name, current, total)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from time import perf_counter
 
 from core.query_engine.dense_retriever import DenseRetriever
 from core.query_engine.fusion import ReciprocalRankFusion
@@ -55,6 +56,7 @@ class HybridSearch:
 
         limit = top_k or self._settings.retrieval.top_k
         if trace is not None:
+            stage_started = perf_counter()
             trace.record_stage(
                 "query_processing",
                 {
@@ -62,6 +64,7 @@ class HybridSearch:
                     "query": processed_query.original_query,
                     "keywords": list(processed_query.keywords),
                     "filters": dict(processed_query.filters),
+                    "elapsed_ms": round((perf_counter() - stage_started) * 1000, 3),
                 },
             )
 
@@ -94,12 +97,14 @@ class HybridSearch:
             fused_results = list((dense_results or sparse_results)[:limit])
 
         if trace is not None:
+            stage_started = perf_counter()
             metadata = {
                 "method": "rrf" if dense_results and sparse_results else "single_path_fallback",
                 "provider": "rrf" if dense_results and sparse_results else "fallback",
                 "dense_count": len(dense_results),
                 "sparse_count": len(sparse_results),
                 "result_count": len(fused_results),
+                "elapsed_ms": round((perf_counter() - stage_started) * 1000, 3),
             }
             if dense_error is not None:
                 metadata["dense_error"] = dense_error

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from time import perf_counter
+
 from core.settings import Settings
 from core.trace import TraceContext
 from core.types import ProcessedQuery, RetrievalResult
@@ -33,6 +35,7 @@ class DenseRetriever:
         """Return dense retrieval results for the processed query."""
 
         limit = top_k or self._settings.retrieval.top_k
+        stage_started = perf_counter()
         vectors = self._embedding.embed([" ".join(query.keywords)], trace=trace)
         if len(vectors) != 1:
             raise ValueError(f"dense query vector count mismatch: expected 1, got {len(vectors)}")
@@ -54,6 +57,7 @@ class DenseRetriever:
                     "query_text": " ".join(query.keywords),
                     "filters": dict(query.filters),
                     "result_count": len(results),
+                    "elapsed_ms": round((perf_counter() - stage_started) * 1000, 3),
                 },
             )
         return results

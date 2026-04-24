@@ -2074,11 +2074,11 @@ dashboard:
 
 | 任务编号 | 任务名称 | 状态 | 完成日期 | 备注 |
 |---------|---------|------|---------|------|
-| F1 | TraceContext 增强（finish + 耗时统计 + trace_type） | [ ] | - |  |
-| F2 | 结构化日志 logger（JSON Lines） | [ ] | - |  |
-| F3 | 在 Query 链路打点 | [ ] | - |  |
-| F4 | 在 Ingestion 链路打点 | [ ] | - |  |
-| F5 | Pipeline 进度回调 (on_progress) | [ ] | - |  |
+| F1 | TraceContext 增强（finish + 耗时统计 + trace_type） | [x] | 2026-04-24 | trace_type/finish/elapsed_ms/to_dict+TraceCollector |
+| F2 | 结构化日志 logger（JSON Lines） | [x] | 2026-04-24 | JSONFormatter+traces.jsonl写入+单元测试 |
+| F3 | 在 Query 链路打点 | [x] | 2026-04-24 | HybridSearch/Reranker阶段耗时与方法打点 |
+| F4 | 在 Ingestion 链路打点 | [x] | 2026-04-24 | load/split/transform/embed/upsert耗时打点 |
+| F5 | Pipeline 进度回调 (on_progress) | [x] | 2026-04-24 | run(on_progress)+6阶段进度回调测试 |
 
 #### 阶段 G：可视化管理平台 Dashboard
 

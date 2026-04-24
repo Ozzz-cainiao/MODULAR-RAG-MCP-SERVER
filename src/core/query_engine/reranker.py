@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from time import perf_counter
+
 from core.settings import Settings
 from core.trace import TraceContext
 from core.types import RetrievalResult
@@ -27,6 +29,7 @@ class Reranker:
 
         limit = top_k or len(candidates)
         candidate_payloads = [candidate.to_dict() for candidate in candidates]
+        stage_started = perf_counter()
 
         fallback_reason: str | None = None
         try:
@@ -50,6 +53,7 @@ class Reranker:
                 "provider": self._settings.rerank.provider,
                 "input_count": len(candidates),
                 "result_count": len(results),
+                "elapsed_ms": round((perf_counter() - stage_started) * 1000, 3),
             }
             if fallback_reason is not None:
                 metadata["fallback_reason"] = fallback_reason

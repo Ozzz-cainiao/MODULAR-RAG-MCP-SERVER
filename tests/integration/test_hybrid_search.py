@@ -4,7 +4,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from core.query_engine import DenseRetriever, HybridSearch, QueryProcessor, ReciprocalRankFusion, SparseRetriever
+from core.query_engine import (
+    DenseRetriever,
+    HybridSearch,
+    QueryProcessor,
+    ReciprocalRankFusion,
+    Reranker,
+    SparseRetriever,
+)
 from core.settings import ObservabilitySettings, ProviderSettings, RetrievalSettings, Settings
 from core.trace import TraceContext
 from ingestion.storage.bm25_indexer import BM25Indexer
@@ -102,15 +109,21 @@ def test_hybrid_search_when_dense_and_sparse_both_hit_then_return_fused_results(
         sparse_retriever=SparseRetriever(settings, bm25_indexer=bm25, vector_store=vector_store),
         fusion=ReciprocalRankFusion(k=10),
     )
-    trace = TraceContext()
+    trace = TraceContext(trace_type="query")
 
     result = hybrid.search("如何配置 Azure", collection="docs", trace=trace)
+    reranked = Reranker(settings).rerank("如何配置 Azure", result.fused_results, trace=trace)
 
     assert result.processed_query.filters["collection"] == "docs"
     assert [item.chunk_id for item in result.fused_results] == ["chunk-1", "chunk-2"]
+    assert [item.chunk_id for item in reranked] == ["chunk-1", "chunk-2"]
+    assert trace.trace_type == "query"
     assert [stage.name for stage in trace.stages] == [
         "query_processing",
         "dense_retrieval",
         "sparse_retrieval",
         "fusion",
+        "rerank",
     ]
+    for stage in trace.stages:
+        assert "elapsed_ms" in stage.metadata

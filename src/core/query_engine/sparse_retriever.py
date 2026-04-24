@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from time import perf_counter
+
 from core.settings import Settings
 from core.trace import TraceContext
 from core.types import ProcessedQuery, RetrievalResult
@@ -32,6 +34,7 @@ class SparseRetriever:
         """Return BM25 candidates enriched with stored text and metadata."""
 
         limit = top_k or self._settings.retrieval.top_k
+        stage_started = perf_counter()
         ranked = self._bm25_indexer.query(query.keywords, top_k=limit)
         hydrated = self._vector_store.get_by_ids([result.chunk_id for result in ranked], trace=trace)
         hydrated_by_id = {payload["chunk_id"]: payload for payload in hydrated}
@@ -62,6 +65,7 @@ class SparseRetriever:
                     "keywords": list(query.keywords),
                     "filters": dict(query.filters),
                     "result_count": len(results),
+                    "elapsed_ms": round((perf_counter() - stage_started) * 1000, 3),
                 },
             )
         return results

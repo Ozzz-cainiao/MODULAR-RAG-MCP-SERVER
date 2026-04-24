@@ -13,6 +13,7 @@ from core.settings import (
     RetrievalSettings,
     Settings,
 )
+from core.trace import TraceContext
 from core.types import Document
 from ingestion.embedding.batch_processor import BatchProcessor
 from ingestion.embedding.dense_encoder import DenseEncoder
@@ -117,7 +118,8 @@ def test_ingestion_pipeline_when_simple_pdf_then_produce_all_outputs(tmp_path: P
     fixture_path.write_bytes(b"%PDF-1.4 fake")
     pipeline = _build_pipeline(tmp_path, monkeypatch, loader=FakeLoader(with_images=True))
 
-    result = pipeline.run(str(fixture_path), collection="test-col")
+    trace = TraceContext(trace_type="ingestion")
+    result = pipeline.run(str(fixture_path), collection="test-col", trace=trace)
 
     assert result.skipped is False
     assert result.chunk_count > 0
@@ -128,6 +130,15 @@ def test_ingestion_pipeline_when_simple_pdf_then_produce_all_outputs(tmp_path: P
     assert (tmp_path / "bm25" / "bm25_index.pkl").exists()
     assert result.stored_image_paths
     assert Path(result.stored_image_paths[0]).exists()
+    assert trace.trace_type == "ingestion"
+    stage_names = [stage.name for stage in trace.stages]
+    assert stage_names[:5] == ["integrity", "load", "split", "chunk_refiner", "chunk_refiner_llm"] or stage_names[:4] == ["integrity", "load", "split", "chunk_refiner"]
+    assert "transform" in stage_names
+    assert "embed" in stage_names
+    assert "upsert" in stage_names
+    for stage in trace.stages:
+        if stage.name in {"load", "split", "transform", "embed", "upsert"}:
+            assert "elapsed_ms" in stage.metadata
 
 
 def test_ingestion_pipeline_when_repeated_without_force_then_skip(tmp_path: Path, monkeypatch) -> None:
