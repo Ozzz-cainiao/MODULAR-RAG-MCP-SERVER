@@ -80,6 +80,29 @@ class FakeVectorStore(BaseVectorStore):
             for item in ranked
         ]
 
+    def get_by_ids(
+        self,
+        chunk_ids: list[str],
+        trace: TraceContext | None = None,
+    ) -> list[VectorQueryResult]:
+        """按输入顺序返回匹配记录。"""
+
+        results: list[VectorQueryResult] = []
+        by_id = {str(item["chunk_id"]): item for item in self._records}
+        for chunk_id in chunk_ids:
+            payload = by_id.get(chunk_id)
+            if payload is None:
+                continue
+            results.append(
+                {
+                    "chunk_id": payload["chunk_id"],
+                    "score": 0.0,
+                    "text": payload["text"],
+                    "metadata": payload["metadata"],
+                }
+            )
+        return results
+
 
 def _build_settings(provider: str) -> Settings:
     return Settings(
@@ -149,4 +172,3 @@ def test_vector_store_factory_create_when_provider_missing_then_raise_readable_e
 
     with pytest.raises(ValueError, match="not-registered-vector-store"):
         VectorStoreFactory.create(settings)
-

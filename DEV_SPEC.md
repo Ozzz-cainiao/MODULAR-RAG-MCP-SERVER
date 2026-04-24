@@ -2051,13 +2051,13 @@ dashboard:
 
 | 任务编号 | 任务名称 | 状态 | 完成日期 | 备注 |
 |---------|---------|------|---------|------|
-| D1 | QueryProcessor（关键词提取 + filters） | [ ] | - |  |
-| D2 | DenseRetriever（调用 VectorStore.query） | [ ] | - |  |
-| D3 | SparseRetriever（BM25 查询） | [ ] | - |  |
-| D4 | RRF Fusion | [ ] | - |  |
-| D5 | HybridSearch 编排 | [ ] | - |  |
-| D6 | Reranker（Core 层编排 + Fallback） | [ ] | - |  |
-| D7 | 脚本入口 query.py（查询可用） | [ ] | - |  |
+| D1 | QueryProcessor（关键词提取 + filters） | [x] | 2026-04-24 | 规则提取关键词/filter+3个单元测试 |
+| D2 | DenseRetriever（调用 VectorStore.query） | [x] | 2026-04-24 | Embedding+VectorStore编排+2个单元测试 |
+| D3 | SparseRetriever（BM25 查询） | [x] | 2026-04-24 | BM25→get_by_ids水合+2个单元测试 |
+| D4 | RRF Fusion | [x] | 2026-04-24 | Reciprocal Rank Fusion实现+2个单元测试 |
+| D5 | HybridSearch 编排 | [x] | 2026-04-24 | Query→Dense/Sparse→Fusion集成+1个集成测试 |
+| D6 | Reranker（Core 层编排 + Fallback） | [x] | 2026-04-24 | 后端异常回退原排序+2个单元测试 |
+| D7 | 脚本入口 query.py（查询可用） | [x] | 2026-04-24 | Query CLI+verbose/no-rerank输出+2个E2E测试 |
 
 #### 阶段 E：MCP Server 层与 Tools
 

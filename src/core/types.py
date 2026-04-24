@@ -210,6 +210,78 @@ class ChunkRecord:
         return cls.from_dict(json.loads(payload))
 
 
+@dataclass(slots=True)
+class ProcessedQuery:
+    """查询预处理结果。"""
+
+    original_query: str
+    keywords: list[str]
+    filters: Metadata
+
+    def __post_init__(self) -> None:
+        self.original_query = _require_non_empty_string(self.original_query, "original_query")
+        if not isinstance(self.keywords, list) or not self.keywords:
+            raise ValueError("keywords 必须是非空列表")
+
+        normalized_keywords: list[str] = []
+        for index, keyword in enumerate(self.keywords):
+            normalized_keywords.append(
+                _require_non_empty_string(keyword, f"keywords[{index}]").lower()
+            )
+        self.keywords = normalized_keywords
+        self.filters = _normalize_optional_metadata(self.filters, "filters")
+
+    def to_dict(self) -> dict[str, Any]:
+        """序列化为字典。"""
+
+        return {
+            "original_query": self.original_query,
+            "keywords": list(self.keywords),
+            "filters": deepcopy(self.filters),
+        }
+
+
+@dataclass(slots=True)
+class RetrievalResult:
+    """统一检索结果契约。"""
+
+    chunk_id: str
+    score: float
+    text: str
+    metadata: Metadata
+
+    def __post_init__(self) -> None:
+        self.chunk_id = _require_non_empty_string(self.chunk_id, "chunk_id")
+        if not isinstance(self.score, (int, float)):
+            raise TypeError("score 必须是数字")
+        self.score = float(self.score)
+        if not isinstance(self.text, str):
+            raise TypeError("text 必须是字符串")
+        self.metadata = _normalize_metadata(self.metadata)
+
+    def to_dict(self) -> dict[str, Any]:
+        """序列化为字典。"""
+
+        return {
+            "chunk_id": self.chunk_id,
+            "score": self.score,
+            "text": self.text,
+            "metadata": deepcopy(self.metadata),
+        }
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> RetrievalResult:
+        """从字典反序列化为检索结果。"""
+
+        payload = _require_mapping(data, "data")
+        return cls(
+            chunk_id=payload.get("chunk_id"),
+            score=payload.get("score"),
+            text=payload.get("text"),
+            metadata=payload.get("metadata"),
+        )
+
+
 def _normalize_metadata(metadata: Mapping[str, Any]) -> Metadata:
     payload = _require_mapping(metadata, "metadata")
     normalized = deepcopy(dict(payload))
@@ -217,6 +289,13 @@ def _normalize_metadata(metadata: Mapping[str, Any]) -> Metadata:
     normalized["source_path"] = _require_non_empty_string(source_path, "metadata.source_path")
     _validate_images_metadata(normalized.get("images"))
     return normalized
+
+
+def _normalize_optional_metadata(metadata: Mapping[str, Any] | None, field_name: str) -> Metadata:
+    if metadata is None:
+        return {}
+    payload = _require_mapping(metadata, field_name)
+    return deepcopy(dict(payload))
 
 
 def _validate_images_metadata(images: Any) -> None:
@@ -289,4 +368,3 @@ def _require_non_negative_int(value: Any, field_path: str) -> int:
     if value < 0:
         raise ValueError(f"{field_path} 不能小于 0")
     return value
-

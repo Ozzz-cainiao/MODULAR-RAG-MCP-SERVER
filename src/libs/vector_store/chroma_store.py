@@ -99,6 +99,34 @@ class ChromaStore(BaseVectorStore):
             for record in ranked_records[:top_k]
         ]
 
+    def get_by_ids(
+        self,
+        chunk_ids: list[str],
+        trace: TraceContext | None = None,
+    ) -> list[VectorQueryResult]:
+        """按 chunk_id 获取记录，保持输入顺序。"""
+
+        if not isinstance(chunk_ids, list):
+            raise ValueError("chunk_ids 必须是 list[str]")
+
+        records_by_id = {
+            str(record["chunk_id"]): {
+                "chunk_id": str(record["chunk_id"]),
+                "score": 0.0,
+                "text": str(record["text"]),
+                "metadata": dict(record["metadata"]),
+            }
+            for record in self._records
+        }
+        ordered_results: list[VectorQueryResult] = []
+        for chunk_id in chunk_ids:
+            if not isinstance(chunk_id, str) or not chunk_id.strip():
+                raise ValueError("chunk_ids 必须是 list[str]")
+            payload = records_by_id.get(chunk_id)
+            if payload is not None:
+                ordered_results.append(dict(payload))
+        return ordered_results
+
     def _match_filters(self, record: VectorRecord, filters: dict[str, Any] | None) -> bool:
         """判断记录是否命中过滤条件。"""
 
@@ -172,4 +200,3 @@ class ChromaStore(BaseVectorStore):
             json.dumps(self._records, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
-

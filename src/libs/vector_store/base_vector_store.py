@@ -58,3 +58,18 @@ class BaseVectorStore(ABC):
             查询结果列表，每项应至少包含 `chunk_id/score/text/metadata`。
         """
 
+    @abstractmethod
+    def get_by_ids(
+        self,
+        chunk_ids: list[str],
+        trace: TraceContext | None = None,
+    ) -> list[VectorQueryResult]:
+        """按 chunk_id 列表获取记录。
+
+        参数:
+            chunk_ids: 待查询的 chunk_id 列表。
+            trace: 可选 TraceContext，用于链路追踪。
+
+        返回:
+            与输入顺序一致的结果列表，不存在的 chunk_id 会被忽略。
+        """

@@ -40,6 +40,22 @@ class FakeVectorStore(BaseVectorStore):
     ) -> list[dict[str, Any]]:
         return []
 
+    def get_by_ids(
+        self,
+        chunk_ids: list[str],
+        trace: VectorTraceContext | None = None,
+    ) -> list[dict[str, Any]]:
+        return [
+            {
+                "chunk_id": chunk_id,
+                "score": 0.0,
+                "text": str(record["text"]),
+                "metadata": dict(record["metadata"]),
+            }
+            for chunk_id in chunk_ids
+            if (record := self.records.get(chunk_id)) is not None
+        ]
+
 
 def _build_settings() -> Settings:
     return Settings(
