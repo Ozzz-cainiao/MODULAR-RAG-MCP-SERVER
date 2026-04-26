@@ -7,6 +7,11 @@ from pathlib import Path
 
 import yaml
 
+from core.env import load_dotenv
+
+
+load_dotenv()
+
 
 class SettingsValidationError(ValueError):
     """当配置缺少必填字段时抛出。"""

@@ -10,6 +10,32 @@
 uv sync
 ```
 
+### 使用 `.env` 配置环境变量
+
+项目根目录支持自动加载 `.env`，不需要你每次手动 `export`。
+
+先复制模板：
+
+```bash
+cp .env.example .env
+```
+
+然后编辑 `.env`：
+
+```bash
+OPENAI_API_KEY=你的真实key
+```
+
+之后直接运行：
+
+```bash
+uv run pytest
+uv run mcp-server
+uv run python scripts/query.py --query "Azure deployment guide"
+```
+
+测试和项目入口都会自动读取根目录 `.env`。
+
 常见运行命令：
 
 ```bash
